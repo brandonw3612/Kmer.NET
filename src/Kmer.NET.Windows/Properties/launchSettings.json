@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Kmer.NET.Windows (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Kmer.NET.Windows (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
