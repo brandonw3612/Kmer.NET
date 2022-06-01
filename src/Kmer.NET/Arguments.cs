@@ -17,10 +17,10 @@ public class Arguments
     public string OutputFileName { get; set; }
     public SortedSet<int> Periods { get; }
     public int MaxTaskQueueSize { get; set; }
-    public uint MinRepeats { get; set; }
-    public uint MaxRepeats { get; set; }
+    public int MinRepeats { get; set; }
+    public int MaxRepeats { get; set; }
     public HashSet<string> EnumeratedSsrs { get; set; }
-    public uint Threads { get; set; }
+    public int Threads { get; set; }
     
     public Arguments()
     {
