@@ -1,4 +1,5 @@
 using Kmer.NET.Interfaces;
+using System.Text;
 
 namespace Kmer.NET;
 
@@ -20,7 +21,11 @@ public class SsrFinder
             _threads.Add(thread);
             thread.Start(new ConsumerArguments()
             {
-                Tasks = _tasks, ProgressController = _progressController, OutputFile = _outputFile, Arguments = _args, AtomicityChecker = _atomicityChecker
+                Tasks = _tasks,
+                ProgressController = _progressController,
+                OutputFile = _outputFile,
+                Arguments = _args,
+                AtomicityChecker = _atomicityChecker
             });
         }
     }
@@ -50,11 +55,11 @@ public class SsrFinder
                     starts.RemoveAt(starts.Count - 1);
                     sizes.RemoveAt(sizes.Count - 1);
                 }
-                
+
                 starts.Add(i + 1);
             }
         }
-        
+
         sizes.Add(sequence.Length - starts[^1]);
 
         if (sizes[^1] == 0)
@@ -77,7 +82,8 @@ public class SsrFinder
 
         _progressController.SetMaximumTick(initSize);
 
-        string header = string.Empty, sequence = string.Empty;
+        string header = string.Empty;
+        StringBuilder sequenceBuilder = new();
         while (inputFile.ReadLine() is string line)
         {
             if (line.Length > 0)
@@ -85,14 +91,14 @@ public class SsrFinder
                 if (line[0] != '>')
                 {
                     _progressController.UpdateProgress(1);
-                    sequence += line.ToUpper();
+                    sequenceBuilder.Append(line.ToUpper());
                 }
                 else
                 {
-                    ProcessSequence(ref header, sequence);
+                    ProcessSequence(ref header, sequenceBuilder.ToString());
 
                     header = line[1..];
-                    sequence = "";
+                    sequenceBuilder = new();
 
                     _progressController.UpdateProgress(header.Length + 2);
                 }
@@ -102,9 +108,9 @@ public class SsrFinder
                 _progressController.UpdateProgress(1);
             }
         }
-        
-        ProcessSequence(ref header, sequence);
-        
+
+        ProcessSequence(ref header, sequenceBuilder.ToString());
+
         inputFile.Close();
 
         switch (_args.Threads)
@@ -125,7 +131,7 @@ public class SsrFinder
             while (_tasks.Size > _args.Threads * 3)
             {
                 var task = _tasks.Get();
-                
+
                 ssrs.Add(task.Identifier, FindSsrs(task, _args, _atomicityChecker));
                 ssrs.WriteToFile(_outputFile, true, true);
                 
@@ -135,6 +141,7 @@ public class SsrFinder
             if (!ssrs.IsEmpty)
             {
                 ssrs.WriteToFile(_outputFile, true, false);
+                
             }
         }
     }
@@ -148,42 +155,42 @@ public class SsrFinder
             return;
         }
 
-        List<int> starts = new() {0}, sizes = new();
+        List<int> starts = new() { 0 }, sizes = new();
         int ignoredCharactersCount = 0;
 
         SplitStringOnIgnoredCharacters(ref starts, ref sizes, sequence, ref ignoredCharactersCount);
-        
+
         _progressController.UpdateProgress(ignoredCharactersCount);
 
         switch (_args.Threads)
         {
             case 1:
-            {
-                SsrContainer ssrs = new();
+                {
+                    SsrContainer ssrs = new();
 
-                for (int i = 0; i < starts.Count; i++)
-                {
-                    var t = new Task(header, sequence[starts[i]..(starts[i] + sizes[i])], starts[i], sequence.Length);
-				
-                    ssrs.Add(t.Identifier, FindSsrs(t, _args, _atomicityChecker));
-                    ssrs.WriteToFile(_outputFile, true, true); 
-                    
-                    _progressController.UpdateProgress(t.Size);
+                    for (int i = 0; i < starts.Count; i++)
+                    {
+                        var t = new Task(header, sequence[starts[i]..(starts[i] + sizes[i])], starts[i], sequence.Length);
+
+                        ssrs.Add(t.Identifier, FindSsrs(t, _args, _atomicityChecker));
+                        ssrs.WriteToFile(_outputFile, true, true);
+                        
+                        _progressController.UpdateProgress(t.Size);
+                    }
+                    break;
                 }
-                break;
-            }
             default:
-            {
-                for (int i = 0; i < starts.Count; i++)
                 {
-                    _tasks.Add(new(header, sequence[starts[i]..(starts[i] + sizes[i])], starts[i], sequence.Length));
+                    for (int i = 0; i < starts.Count; i++)
+                    {
+                        _tasks.Add(new(header, sequence[starts[i]..(starts[i] + sizes[i])], starts[i], sequence.Length));
+                    }
+                    break;
                 }
-                break;
-            }
         }
     }
 
-    public SsrFinder(Arguments args, IProgressController progressController)
+    public SsrFinder(Arguments args, IProgressController progressController = null)
     {
         _args = args;
         _progressController = progressController;
@@ -192,14 +199,16 @@ public class SsrFinder
         _atomicityChecker = new();
         _tasks = new(args.MaxTaskQueueSize);
     }
-    
+
     public void Run()
     {
         CreateThreads();
-        
+
         ProcessInput();
-        
+
         JoinAndForgetAllThreads();
+
+        _outputFile.FlushToFileClose();
     }
 
     #region Static methods
@@ -227,7 +236,7 @@ public class SsrFinder
         {
             var task = tasks.Get();
             if (task is null) break;
-            
+
             ssrs.Add(task.Identifier, FindSsrs(task, args, atomicityChecker));
             ssrs.WriteToFile(outputFile, false, true);
             
@@ -237,6 +246,7 @@ public class SsrFinder
         if (!ssrs.IsEmpty)
         {
             ssrs.WriteToFile(outputFile, true, false);
+            
         }
     }
 
@@ -254,7 +264,7 @@ public class SsrFinder
         }
         return new Ssr(baseStr, repeats, index + globalPosition);
     }
-    
+
     private static bool IsGoodSsr(Ssr ssr, int globalPosition, List<bool> filter, Arguments args,
         AtomicityChecker atomicityChecker)
     {
@@ -328,7 +338,7 @@ public class SsrFinder
                 }
             }
         }
-        
+
         filter.Clear();
         return ssrs;
     }
@@ -338,9 +348,9 @@ public class SsrFinder
         if (args.Exhaustive) return FindSsrsExhaustively(task, args.Periods);
         return FindSsrsNormally(task, args, atomicityChecker);
     }
-    
+
     #endregion
-    
+
     private class ConsumerArguments
     {
         public TaskQueue Tasks { get; init; }

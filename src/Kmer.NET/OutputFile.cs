@@ -80,6 +80,11 @@ public class OutputFile
     public void Write(object output)
     {
         _sw.Write(output);
+    }
+
+    public void FlushToFileClose()
+    {
         _sw.Flush();
+        _sw.Close();
     }
 }
