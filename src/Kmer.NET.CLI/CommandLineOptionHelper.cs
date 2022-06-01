@@ -55,17 +55,17 @@ public class CommandLineOptionHelper
     [Option(shortName: 'Q', Default = 1000, Required = false, HelpText = "Max size of the tasks queue.")]
     public int MaxTaskQueueSize { get; set; }
     
-    [Option(shortName: 'r', Default = 2u, Required = false, HelpText = "Keep only SSRs that repeat >= r times.")]
-    public uint MinRepeats { get; set; }
+    [Option(shortName: 'r', Default = 2, Required = false, HelpText = "Keep only SSRs that repeat >= r times.")]
+    public int MinRepeats { get; set; }
     
-    [Option(shortName: 'R', Default = 1000u, Required = false, HelpText = "Keep only SSRs that repeat <= R times.")]
-    public uint MaxRepeats { get; set; }
+    [Option(shortName: 'R', Default = 1000, Required = false, HelpText = "Keep only SSRs that repeat <= R times.")]
+    public int MaxRepeats { get; set; }
     
     [Option(shortName: 's', Default = "", Required = false, HelpText = "A comma-separated list of SSRs to search for; e.g. \"AC,GTTA,TTCTG,CCG\" or \"TGA\". Please note that other options may prevent SSRs specified with this option from appearing in the output. For example, if -p is \"4-6\", then an SSR with a repeating \"AC\" will never be displayed because \"AC\" has a period size of 2 (and, as it turns out, 2 is not in the range 4-6).")]
     public string EnumeratedSsrsStr { get; set; }
 
-    [Option(shortName: 't', Default = 1u, Required = false, HelpText = "Number of threads.")]
-    public uint Threads { get; set; }
+    [Option(shortName: 't', Default = 1, Required = false, HelpText = "Number of threads.")]
+    public int Threads { get; set; }
     
     [Option(shortName: 'v', Default = false, Required = false)]
     public bool DisplayVersion { get; set; }

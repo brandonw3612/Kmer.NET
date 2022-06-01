@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Kmer.NET.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "-i \"G:\\test_input.fa\" -o \"G:\\test_output.tsv\" -l 5 -r 4 -n 20 -t 12"
+    }
+  }
+}
