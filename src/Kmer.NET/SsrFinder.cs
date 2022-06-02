@@ -80,7 +80,7 @@ public class SsrFinder
 
         int initSize = _args.InputFileName == "/dev/stdin" ? 0 : CalculateDataSizeFromFasta(_args.InputFileName);
 
-        _progressController.SetMaximumTick(initSize);
+        _progressController?.SetMaximumTick(initSize);
 
         string header = string.Empty;
         StringBuilder sequenceBuilder = new();
@@ -90,7 +90,7 @@ public class SsrFinder
             {
                 if (line[0] != '>')
                 {
-                    _progressController.UpdateProgress(1);
+                    _progressController?.UpdateProgress(1);
                     sequenceBuilder.Append(line.ToUpper());
                 }
                 else
@@ -100,12 +100,12 @@ public class SsrFinder
                     header = line[1..];
                     sequenceBuilder = new();
 
-                    _progressController.UpdateProgress(header.Length + 2);
+                    _progressController?.UpdateProgress(header.Length + 2);
                 }
             }
             else
             {
-                _progressController.UpdateProgress(1);
+                _progressController?.UpdateProgress(1);
             }
         }
 
@@ -135,7 +135,7 @@ public class SsrFinder
                 ssrs.Add(task.Identifier, FindSsrs(task, _args, _atomicityChecker));
                 ssrs.WriteToFile(_outputFile, true, true);
                 
-                _progressController.UpdateProgress(task.Size);
+                _progressController?.UpdateProgress(task.Size);
             }
 
             if (!ssrs.IsEmpty)
@@ -151,7 +151,7 @@ public class SsrFinder
         if (sequence.Length == 0 || sequence.Length < _args.MinSequenceLength ||
             sequence.Length > _args.MaxSequenceLength)
         {
-            _progressController.UpdateProgress(sequence.Length);
+            _progressController?.UpdateProgress(sequence.Length);
             return;
         }
 
@@ -160,7 +160,7 @@ public class SsrFinder
 
         SplitStringOnIgnoredCharacters(ref starts, ref sizes, sequence, ref ignoredCharactersCount);
 
-        _progressController.UpdateProgress(ignoredCharactersCount);
+        _progressController?.UpdateProgress(ignoredCharactersCount);
 
         switch (_args.Threads)
         {
@@ -175,7 +175,7 @@ public class SsrFinder
                         ssrs.Add(t.Identifier, FindSsrs(t, _args, _atomicityChecker));
                         ssrs.WriteToFile(_outputFile, true, true);
                         
-                        _progressController.UpdateProgress(t.Size);
+                        _progressController?.UpdateProgress(t.Size);
                     }
                     break;
                 }
